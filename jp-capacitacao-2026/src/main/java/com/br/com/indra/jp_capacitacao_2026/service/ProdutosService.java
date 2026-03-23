@@ -44,12 +44,12 @@ public class ProdutosService {
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
         final var historico = new HistoricoPreco();
-        historico.setPrecoAntigo(produto.getPreco()); // ← captura ANTES do set
+        historico.setPrecoAntigo(produto.getPreco());
         historico.setPrecoNovo(preco);
         historico.setProdutos(produto);
         historicoPrecoRepository.save(historico);
 
-        produto.setPreco(preco);                      // ← altera DEPOIS
+        produto.setPreco(preco);
         return produtosRepository.saveAndFlush(produto);
     }
 }
