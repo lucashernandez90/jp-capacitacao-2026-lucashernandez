@@ -5,35 +5,31 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.validator.constraints.UUID;
-import java.math.BigDecimal;
+
+import java.util.List;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "produtos")
-public class Produtos {
+@Table(name = "categoria")
+
+public class Categoria {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "nome", nullable = false, unique = true)
     private String nome;
 
-    private String descricao;
-
-    @Column(nullable = false)
-    private BigDecimal preco;
-
-    @Column(name="codigo_barras")
-    private String codigoBarras;
 
     @ManyToOne
-    @JoinColumn(name = "categoria_id")
-    private Categoria categoria;
+    @JoinColumn(name = "categoria_pai_id")
+    private Categoria categoriaPai;
 
 
+    @OneToMany(mappedBy = "categoriaPai")
+    private List<Categoria> subcategorias;
 }

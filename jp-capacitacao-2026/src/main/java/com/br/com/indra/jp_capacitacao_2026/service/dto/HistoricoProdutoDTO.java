@@ -1,26 +1,13 @@
 package com.br.com.indra.jp_capacitacao_2026.service.dto;
 
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Data
-@Builder
-@AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
-
-public class HistoricoProdutoDTO {
-
-    private UUID id;
-    private String produto;
-    private BigDecimal precoAntigo;
-    private BigDecimal precoNovo;
-    private LocalDateTime dataRegistro;
-}
+public record HistoricoProdutoDTO(
+        UUID id,
+        String produto,
+        BigDecimal precoAntigo,
+        BigDecimal precoNovo,
+        LocalDateTime dataRegistro
+) {}

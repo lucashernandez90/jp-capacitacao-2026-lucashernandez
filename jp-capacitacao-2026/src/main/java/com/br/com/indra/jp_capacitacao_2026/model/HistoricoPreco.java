@@ -28,13 +28,17 @@ public class HistoricoPreco {
     @UuidGenerator
     @Column(name = "id", columnDefinition = "VARCHAR(36)")
     private UUID id;
+
     @ManyToOne
     @JoinColumn(name = "produtos_id")
     private Produtos produtos;
+
     @Column(name = "preco_antigo")
     private BigDecimal precoAntigo;
+
     @Column(name = "preco_novo")
     private BigDecimal precoNovo;
+
     @Column(name = "data_alteracao", updatable = false)
     @CreationTimestamp
     private LocalDateTime dataAlteracao;
