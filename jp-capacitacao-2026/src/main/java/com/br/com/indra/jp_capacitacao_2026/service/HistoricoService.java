@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -16,16 +15,23 @@ public class HistoricoService {
     private final HistoricoPrecoRepository historicoPrecoRepository;
 
     public List<HistoricoProdutoDTO> getHistoricoByProdutoId(Long produtoId) {
-        return historicoPrecoRepository.findByProdutosId(produtoId)
-                .stream()
-                .map(h -> new HistoricoProdutoDTO(
-                        h.getId(),
-                        h.getProdutos().getNome(),
-                        h.getPrecoAntigo(),
-                        h.getPrecoNovo(),
-                        h.getDataAlteracao()
-                ))
-                .toList();
+
+        try{
+            return historicoPrecoRepository.findByProdutosId(produtoId)
+                    .stream()
+                    .map(h -> new HistoricoProdutoDTO(
+                            h.getId(),
+                            h.getProdutos().getNome(),
+                            h.getPrecoAntigo(),
+                            h.getPrecoNovo(),
+                            h.getDataAlteracao()
+                    ))
+                    .toList();
+        } catch (RuntimeException e){
+            throw new RuntimeException("Erro ao buscar historico do produto" + e.getMessage());
+        }
     }
+
+
 
 }

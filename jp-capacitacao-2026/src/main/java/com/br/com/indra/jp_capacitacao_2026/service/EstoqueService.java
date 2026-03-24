@@ -21,31 +21,40 @@ public class EstoqueService {
     private final ProdutosRepository produtosRepository;
 
     public EstoqueDTO adicionar(Long produtoId, TransacaoDTO dto, TipoTransacao tipo){
-        final var estoque = buscarOuCriar(produtoId);
+        try{
+            final var estoque = buscarOuCriar(produtoId);
 
-        estoque.setQuantidade(estoque.getQuantidade() + dto.quantidade());
-        verificarEstoqueBaixo(estoque);
-        estoqueRepository.save(estoque);
+            estoque.setQuantidade(estoque.getQuantidade() + dto.quantidade());
+            verificarEstoqueBaixo(estoque);
+            estoqueRepository.save(estoque);
 
-        registrarTransacao(estoque.getProduto().getId(), dto.quantidade(), tipo, dto.motivo());
+            registrarTransacao(estoque.getProduto().getId(), dto.quantidade(), tipo, dto.motivo());
 
-        return toDTO(estoque);
-    }
-
-    public EstoqueDTO remover(Long produtoId, TransacaoDTO dto){
-        final var estoque = buscarOuCriar(produtoId);
-
-        if(estoque.getQuantidade() < dto.quantidade()){
-            throw new RuntimeException("Estoque insuficiente. Disponivel:" + estoque.getQuantidade());
+            return toDTO(estoque);
+        } catch (RuntimeException e){
+            throw new RuntimeException("Erro ao adicionar no estoque: " + e.getMessage());
         }
 
-        estoque.setQuantidade(estoque.getQuantidade() - dto.quantidade());
-        verificarEstoqueBaixo(estoque);
-        estoqueRepository.save(estoque);
+    }
 
-        registrarTransacao(produtoId, dto.quantidade(), TipoTransacao.SAIDA,dto.motivo());
+    public EstoqueDTO remover(Long produtoId, TransacaoDTO dto) {
+        try {
+            final var estoque = buscarOuCriar(produtoId);
 
-        return toDTO(estoque);
+            if (estoque.getQuantidade() < dto.quantidade()) {
+                throw new RuntimeException("Estoque insuficiente. Disponível: " + estoque.getQuantidade());
+            }
+
+            estoque.setQuantidade(estoque.getQuantidade() - dto.quantidade());
+            verificarEstoqueBaixo(estoque);
+            estoqueRepository.save(estoque);
+            registrarTransacao(produtoId, -dto.quantidade(), TipoTransacao.SAIDA, dto.motivo());
+
+            return toDTO(estoque);
+
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Erro ao remover estoque: " + e.getMessage());
+        }
     }
 
     public EstoqueDTO consultar(Long produtoId){
@@ -68,14 +77,21 @@ public class EstoqueService {
         estoque.setEstoque_baixo(estoque.getQuantidade() <= estoque.getQuantidade_minima());
     }
     private void registrarTransacao(Long produtoId, Integer delta, TipoTransacao tipo, String motivo) {
-        final var produto = produtosRepository.findById(produtoId).orElseThrow();
-        final var transacao = new InventoryTransaction();
-        transacao.setProduto(produto);
-        transacao.setDelta(delta);
-        transacao.setTipo(tipo);
-        transacao.setMotivo(motivo);
-        inventoryTransactionRepository.save(transacao);
+
+        try{
+            final var produto = produtosRepository.findById(produtoId)
+                    .orElseThrow(() -> new RuntimeException("Produto não encontrado com id: " + produtoId));
+            final var transacao = new InventoryTransaction();
+            transacao.setProduto(produto);
+            transacao.setDelta(delta);
+            transacao.setTipo(tipo);
+            transacao.setMotivo(motivo);
+            inventoryTransactionRepository.save(transacao);
+        } catch (RuntimeException e){
+            throw new RuntimeException("Erro ao registrar: " + e.getMessage());
+        }
     }
+
     private EstoqueDTO toDTO(Estoque e) {
         return new EstoqueDTO(
                 e.getProduto().getId(),

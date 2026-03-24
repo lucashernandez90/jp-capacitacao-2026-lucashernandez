@@ -36,20 +36,32 @@ public class ProdutosService {
     }
 
     public Produtos getById(Long id) {
-        return produtosRepository.findById(id).get();
+        try{
+            return produtosRepository.findById(id).orElseThrow(() -> new RuntimeException("Produto nao encontrado"));
+        } catch (RuntimeException e){
+            throw new RuntimeException("Erro ao buscar produto: " + e.getMessage());
+        }
+
     }
 
     public Produtos atualizaPreco(Long id, BigDecimal preco) {
-        final var produto = produtosRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+        try{
+            final var produto = produtosRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
-        final var historico = new HistoricoPreco();
-        historico.setPrecoAntigo(produto.getPreco());
-        historico.setPrecoNovo(preco);
-        historico.setProdutos(produto);
-        historicoPrecoRepository.save(historico);
+            final var historico = new HistoricoPreco();
+            historico.setPrecoAntigo(produto.getPreco());
+            historico.setPrecoNovo(preco);
+            historico.setProdutos(produto);
+            historicoPrecoRepository.save(historico);
 
-        produto.setPreco(preco);
-        return produtosRepository.saveAndFlush(produto);
+            produto.setPreco(preco);
+            return produtosRepository.saveAndFlush(produto);
+
+        } catch (RuntimeException e){
+            throw new RuntimeException("Erro ao atualizar preco: " + e.getMessage());
+        }
+
+
     }
 }

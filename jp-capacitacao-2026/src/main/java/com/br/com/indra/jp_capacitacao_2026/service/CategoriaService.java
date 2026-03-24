@@ -17,20 +17,23 @@ public class CategoriaService {
     public List<Categoria> getAll() { return categoriaRepository.findAll(); }
 
     public Categoria criar(CategoriaDTO dto) {
-        if (categoriaRepository.existsByNomeAndCategoriaPaiId(dto.nome(), dto.categoriaPaiId())) {
-            throw new RuntimeException("Ja existe uma categoria com esse nome neste nivel");
+        try{
+            if (categoriaRepository.existsByNomeAndCategoriaPaiId(dto.nome(), dto.categoriaPaiId())) {
+                throw new RuntimeException("Ja existe uma categoria com esse nome neste nivel");
+            }
+
+            final var categoria = new Categoria();
+            categoria.setNome(dto.nome());
+
+            if (dto.categoriaPaiId() != null) {
+                final var pai = categoriaRepository.findById(dto.categoriaPaiId())
+                        .orElseThrow(() -> new RuntimeException("Categoria pai nao encontrada"));
+                categoria.setCategoriaPai(pai);
         }
-
-        final var categoria = new Categoria();
-        categoria.setNome(dto.nome());
-
-        if (dto.categoriaPaiId() != null) {
-            final var pai = categoriaRepository.findById(dto.categoriaPaiId())
-                    .orElseThrow(() -> new RuntimeException("Categoria pai nao encontrada"));
-            categoria.setCategoriaPai(pai);
+            return categoriaRepository.save(categoria);
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Erro ao criar categoria: " + e.getMessage());
         }
-
-        return categoriaRepository.save(categoria);
     }
 
     public Categoria atualizar(Long id, CategoriaDTO dto) {
