@@ -45,4 +45,14 @@ public class CarrinhoController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/finalizar")
+    public ResponseEntity<CarrinhoDTO> finalizarCarrinho(@RequestParam Long userId) {
+        return ResponseEntity.ok(carrinhoService.finalizarCarrinho(userId));
+    }
+
+    @PostMapping("/cancelar")
+    public ResponseEntity<CarrinhoDTO> cancelarCarrinho(@RequestParam Long userId) {
+        return ResponseEntity.ok(carrinhoService.cancelarCarrinho(userId));
+    }
+
 }

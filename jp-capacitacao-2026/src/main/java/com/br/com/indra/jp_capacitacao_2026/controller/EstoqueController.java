@@ -34,4 +34,16 @@ public class EstoqueController {
     public ResponseEntity<EstoqueDTO> consultar(@PathVariable Long productId) {
         return ResponseEntity.ok(estoqueService.consultar(productId));
     }
+
+    @PostMapping("/{productId}/adjust")
+    public ResponseEntity<EstoqueDTO> ajustar(@PathVariable Long productId,
+                                              @RequestBody TransacaoDTO dto) {
+        return ResponseEntity.ok(estoqueService.ajustar(productId, dto));
+    }
+
+    @PostMapping("/{productId}/return")
+    public ResponseEntity<EstoqueDTO> devolver(@PathVariable Long productId,
+                                               @RequestBody TransacaoDTO dto) {
+        return ResponseEntity.ok(estoqueService.devolver(productId, dto));
+    }
 }

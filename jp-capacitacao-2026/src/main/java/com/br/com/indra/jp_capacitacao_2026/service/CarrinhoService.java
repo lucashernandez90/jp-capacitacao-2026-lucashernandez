@@ -3,13 +3,16 @@ package com.br.com.indra.jp_capacitacao_2026.service;
 import com.br.com.indra.jp_capacitacao_2026.model.Carrinho;
 import com.br.com.indra.jp_capacitacao_2026.model.CarrinhoItem;
 import com.br.com.indra.jp_capacitacao_2026.model.enums.StatusCarrinho;
+import com.br.com.indra.jp_capacitacao_2026.model.enums.TipoTransacao;
 import com.br.com.indra.jp_capacitacao_2026.repository.CarrinhoItemRepository;
 import com.br.com.indra.jp_capacitacao_2026.repository.CarrinhoRepository;
+import com.br.com.indra.jp_capacitacao_2026.repository.EstoqueRepository;
 import com.br.com.indra.jp_capacitacao_2026.repository.ProdutosRepository;
 import com.br.com.indra.jp_capacitacao_2026.service.dto.CarrinhoDTO;
 import com.br.com.indra.jp_capacitacao_2026.service.dto.CarrinhoItemDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -21,6 +24,7 @@ public class CarrinhoService {
     private final CarrinhoRepository carrinhoRepository;
     private final CarrinhoItemRepository carrinhoItemRepository;
     private final ProdutosRepository produtosRepository;
+    private final EstoqueService estoqueService;
 
     public CarrinhoDTO getCarrinho(Long userId) {
         try {
@@ -92,6 +96,53 @@ public class CarrinhoService {
                     novoCarrinho.setStatus(StatusCarrinho.ATIVO);
                     return carrinhoRepository.save(novoCarrinho);
                 });
+    }
+
+    @Transactional
+    public CarrinhoDTO finalizarCarrinho(Long userID){
+        try{
+            final var carrinho = carrinhoRepository
+                    .findByUserIdAndStatus(userID, StatusCarrinho.ATIVO)
+                    .orElseThrow(() -> new RuntimeException("Carrinho nao encontrado"));
+
+            if(carrinho.getItens().isEmpty()){
+                throw new RuntimeException("Carrinho vazio nao pode ser finalizado");
+            }
+
+            baixarEstoque(carrinho);
+
+            carrinho.setStatus(StatusCarrinho.FINALIZADO);
+            carrinhoRepository.save(carrinho);
+
+            return toDTO(carrinho);
+        } catch (RuntimeException e){
+            throw new RuntimeException("Erro ao finalizar carrinho: " + e.getMessage());
+        }
+    }
+
+    public CarrinhoDTO cancelarCarrinho(Long userId){
+        try {
+            final var carrinho = carrinhoRepository
+                    .findByUserIdAndStatus(userId, StatusCarrinho.ATIVO)
+                    .orElseThrow(() -> new RuntimeException("Carrinho nao encontrado"));
+
+            carrinho.setStatus(StatusCarrinho.CANCELADO);
+            carrinhoRepository.save(carrinho);
+
+            return toDTO(carrinho);
+        } catch (RuntimeException e){
+            throw new RuntimeException("Erro ao cancelar carrinho: " + e.getMessage());
+        }
+    }
+
+    private void baixarEstoque(Carrinho carrinho) {
+        for (CarrinhoItem item : carrinho.getItens()) {
+
+            estoqueService.baixarEstoque(
+                    item.getProduto().getId(),
+                    item.getQuantidade()
+            );
+        }
     }
 
     private CarrinhoDTO toDTO(Carrinho carrinho) {

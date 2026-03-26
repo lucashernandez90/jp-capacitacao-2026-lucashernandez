@@ -1,5 +1,7 @@
 package com.br.com.indra.jp_capacitacao_2026.service;
 
+import com.br.com.indra.jp_capacitacao_2026.model.Carrinho;
+import com.br.com.indra.jp_capacitacao_2026.model.CarrinhoItem;
 import com.br.com.indra.jp_capacitacao_2026.model.Estoque;
 import com.br.com.indra.jp_capacitacao_2026.model.InventoryTransaction;
 import com.br.com.indra.jp_capacitacao_2026.model.enums.TipoTransacao;
@@ -90,6 +92,65 @@ public class EstoqueService {
         } catch (RuntimeException e){
             throw new RuntimeException("Erro ao registrar: " + e.getMessage());
         }
+    }
+
+    public EstoqueDTO ajustar(Long produtoId, TransacaoDTO dto){
+        try{
+            final var estoque = buscarOuCriar(produtoId);
+
+            int novaQuantidade = estoque.getQuantidade() + dto.quantidade();
+
+            if (novaQuantidade < 0){
+                throw new RuntimeException("Ajuste invalido: estoque nao pode ficar negativo");
+            }
+
+            estoque.setQuantidade(novaQuantidade);
+            verificarEstoqueBaixo(estoque);
+            estoqueRepository.save(estoque);
+
+            registrarTransacao(produtoId, dto.quantidade(), TipoTransacao.AJUSTE, dto.motivo());
+
+            return toDTO(estoque);
+        } catch (RuntimeException e){
+            throw new RuntimeException("Erro ao ajustar estoque: " + e.getMessage());
+        }
+    }
+
+    public EstoqueDTO devolver(Long produtoId, TransacaoDTO dto){
+        try{
+            final var estoque = buscarOuCriar(produtoId);
+
+            estoque.setQuantidade(estoque.getQuantidade() + dto.quantidade());
+            verificarEstoqueBaixo(estoque);
+            estoqueRepository.save(estoque);
+
+            registrarTransacao(produtoId, dto.quantidade(), TipoTransacao.DEVOLUCAO, dto.motivo());
+
+            return toDTO(estoque);
+        } catch (RuntimeException e){
+            throw new RuntimeException("Erro ao registrar devolucao: " + e.getMessage());
+        }
+    }
+
+    public void baixarEstoque(Long produtoId, Integer quantidade) {
+
+        final var estoque = buscarOuCriar(produtoId);
+
+        if (estoque.getQuantidade() < quantidade) {
+            throw new RuntimeException("Estoque insuficiente para o produto: " + produtoId + "Disponivel: - " + estoque.getQuantidade() +
+                    "Solicitado" + quantidade);
+        }
+
+        estoque.setQuantidade(estoque.getQuantidade() - quantidade);
+        verificarEstoqueBaixo(estoque);
+        estoqueRepository.save(estoque);
+
+        registrarTransacao(
+                produtoId,
+                -quantidade,
+                TipoTransacao.SAIDA,
+                "Venda via carrinho"
+        );
     }
 
     private EstoqueDTO toDTO(Estoque e) {
