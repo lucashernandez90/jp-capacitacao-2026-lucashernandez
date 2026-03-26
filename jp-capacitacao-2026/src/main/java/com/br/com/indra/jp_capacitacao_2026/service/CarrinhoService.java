@@ -72,6 +72,18 @@ public class CarrinhoService {
         }
     }
 
+    public void deletarCarrinho(Long carrinhoId) {
+        try {
+            final var carrinho = carrinhoRepository.findById(carrinhoId)
+                    .orElseThrow(() -> new RuntimeException("Carrinho nao encontrado"));
+
+            carrinhoRepository.delete(carrinho);
+
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Erro ao deletar carrinho: " + e.getMessage());
+        }
+    }
+
     private Carrinho buscarOuCriarCarrinho(Long userId) {
         return carrinhoRepository.findByUserIdAndStatus(userId, StatusCarrinho.ATIVO)
                 .orElseGet(() -> {
