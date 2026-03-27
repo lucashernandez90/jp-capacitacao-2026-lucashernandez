@@ -1,7 +1,9 @@
 package com.br.com.indra.jp_capacitacao_2026.controller;
 
 
+import com.br.com.indra.jp_capacitacao_2026.model.Pedido;
 import com.br.com.indra.jp_capacitacao_2026.service.CarrinhoService;
+import com.br.com.indra.jp_capacitacao_2026.service.PedidoService;
 import com.br.com.indra.jp_capacitacao_2026.service.dto.CarrinhoDTO;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 public class CarrinhoController {
 
     private final CarrinhoService carrinhoService;
+    private final PedidoService pedidoService;
 
     @GetMapping
     public ResponseEntity<CarrinhoDTO> getCarrinho(@RequestParam Long userId) {
@@ -53,6 +56,13 @@ public class CarrinhoController {
     @PostMapping("/cancelar")
     public ResponseEntity<CarrinhoDTO> cancelarCarrinho(@RequestParam Long userId) {
         return ResponseEntity.ok(carrinhoService.cancelarCarrinho(userId));
+    }
+
+    @PostMapping("/{carrinhoId}/checkout")
+    public ResponseEntity<Pedido> checkout(@PathVariable Long carrinhoId) {
+
+        Pedido pedido = pedidoService.criarPedidoCarrinhoAtivo(carrinhoId);
+        return ResponseEntity.ok(pedido);
     }
 
 }
